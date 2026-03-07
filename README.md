@@ -1,41 +1,49 @@
 # FluidNav.Maui
 
-`FluidNav.Maui` é um plugin experimental para navegação fluida em aplicações .NET MAUI, como alternativa ao `Shell`, com navegação por rotas e transições suaves entre views.
+`FluidNav.Maui` is an experimental plugin for fluid navigation in .NET MAUI apps, with route-based navigation and smooth transitions.
 
-## Plataforma e versão
+## Platform and version
 
-Este repositório está configurado para **.NET 10**.
+This repository is configured for **.NET 10**.
 
-## Instalação (pacote NuGet local)
+## Installation (local NuGet package)
 
-### 1) Gerar pacote localmente
+### 1) Build a local package
 
-Na raiz do repositório:
+From the repository root:
 
 ```bash
 dotnet workload restore src/FluidNav.csproj
 dotnet pack src/FluidNav.csproj -c Release -p:TargetFrameworks=net10.0-android -o ./artifacts/nuget
 ```
 
-O pacote `.nupkg` será gerado em `./artifacts/nuget`.
+The `.nupkg` file will be generated in `./artifacts/nuget`.
 
-### 2) Registrar uma fonte NuGet local
+### 2) Register a local NuGet source
 
-Exemplo (ajuste o caminho para o seu ambiente):
+Example (adjust the path for your environment):
 
 ```bash
-dotnet nuget add source /caminho/absoluto/para/artifacts/nuget --name fluidnav-local
+dotnet nuget add source /absolute/path/to/artifacts/nuget --name fluidnav-local
 ```
 
-### 3) Consumir no projeto MAUI
+### 3) Consume it in your MAUI app
 
 ```bash
 dotnet add package FluidNav.Maui --source fluidnav-local
 ```
 
-## Uso básico
+## Plugin integration (step by step)
 
-### 1) Registrar o FluidNav no `MauiProgram`
+### 1) Add a host page that implements `IFluidHost`
+
+Use a host page based on the sample implementation in:
+
+- `samples/FluidHostPage.cs`
+
+This host is required because `UseFluidNav<THostView>` expects `THostView : IFluidHost`.
+
+### 2) Register FluidNav in `MauiProgram`
 
 ```csharp
 using FluidNav;
@@ -47,7 +55,12 @@ builder
         .AddRoute<Playlist, PlaylistVM>());
 ```
 
-### 2) Definir a página principal no `App`
+Notes:
+
+- The first route added becomes the default route.
+- Routes are registered by view type name (for example, `PlaylistCollection`).
+
+### 3) Set the app root page in `App.xaml.cs`
 
 ```csharp
 using FluidNav;
@@ -62,22 +75,39 @@ public partial class App : Application
 }
 ```
 
-## GitHub Actions (build + empacotamento local)
+### 4) Navigate between pages
 
-Foi adicionada a workflow:
+Use `FlowNavigation.Current` in your views/view models, for example:
+
+```csharp
+await FlowNavigation.Current.GoTo<Playlist>();
+await FlowNavigation.Current.GoBack();
+```
+
+## Shell compatibility
+
+FluidNav is designed as an alternative to MAUI Shell navigation.
+
+- ✅ Compatible with MAUI apps that use `Application.MainPage` and `NavigationPage`.
+- ⚠️ Not intended to run side-by-side with Shell navigation APIs (`Shell.Current.GoToAsync`, Shell route registration, etc.) as the primary navigation flow.
+- ⚠️ In practice, choose one navigation root: **FluidNav** (`FluidNavigationPage`) or **Shell** (`AppShell`) for the main app flow.
+
+## GitHub Actions (build + local packaging)
+
+Workflow:
 
 - `.github/workflows/nuget-local.yml`
 
-Essa pipeline:
+This pipeline:
 
-1. Usa .NET 10
-2. Restaura workloads/dependências
-3. Compila o projeto
-4. Gera o pacote NuGet em `artifacts/nuget`
-5. Publica o pacote como **artifact** da execução
+1. Uses .NET 10
+2. Restores workloads/dependencies
+3. Builds the project
+4. Creates the NuGet package in `artifacts/nuget`
+5. Publishes the package as a workflow artifact
 
-> Observação: não há publicação em nuget.org. O pacote fica disponível apenas localmente (ou como artifact para download).
+> Note: there is no publication to nuget.org. The package is available only locally (or as a downloadable artifact).
 
-## Aviso
+## Warning
 
-Projeto experimental: use com cautela em produção.
+Experimental project: use with caution in production.
