@@ -38,7 +38,16 @@ jobs:
 
       - name: Publish package to GitHub Packages
         if: github.event_name != 'pull_request'
-        run: dotnet nuget push "artifacts/nuget/*.nupkg" --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+        run: |
+          shopt -s nullglob
+          packages=(artifacts/nuget/*.nupkg)
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "No NuGet packages found to publish."
+            exit 1
+          fi
+          for package in "${packages[@]}"; do
+            dotnet nuget push "$package" --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+          done
 
       - name: Upload NuGet package artifact
         uses: actions/upload-artifact@v4
