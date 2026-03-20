@@ -92,7 +92,7 @@ FluidNav is designed as an alternative to MAUI Shell navigation.
 - ⚠️ Not intended to run side-by-side with Shell navigation APIs (`Shell.Current.GoToAsync`, Shell route registration, etc.) as the primary navigation flow.
 - ⚠️ In practice, choose one navigation root: **FluidNav** (`FluidNavigationPage`) or **Shell** (`AppShell`) for the main app flow.
 
-## GitHub Actions (build + local packaging)
+## GitHub Actions (build + GitHub Packages publish)
 
 Workflow:
 
@@ -104,9 +104,10 @@ This pipeline:
 2. Restores workloads/dependencies
 3. Builds the project
 4. Creates the NuGet package in `artifacts/nuget`
-5. Publishes the package as a workflow artifact
+5. Publishes the package to GitHub Packages (on `push` to `main`/`master` and `workflow_dispatch`)
+6. Publishes the package as a workflow artifact
 
-> Note: there is no publication to nuget.org. The package is available only locally (or as a downloadable artifact).
+> Note: this workflow does not publish to nuget.org.
 
 ## Warning
 

@@ -1,4 +1,4 @@
-name: Build and Pack (local NuGet)
+name: Build, Pack and Publish (GitHub Packages)
 
 on:
   push:
@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: write
 
     steps:
       - name: Checkout
@@ -34,6 +35,19 @@ jobs:
 
       - name: Pack (local package)
         run: dotnet pack src/FluidNav.csproj -c Release -p:TargetFrameworks=net10.0-android --no-build -o artifacts/nuget
+
+      - name: Publish package to GitHub Packages
+        if: github.event_name != 'pull_request'
+        run: |
+          shopt -s nullglob
+          packages=(artifacts/nuget/*.nupkg)
+          if [ ${#packages[@]} -eq 0 ]; then
+            echo "No NuGet packages found to publish."
+            exit 1
+          fi
+          for package in "${packages[@]}"; do
+            dotnet nuget push "$package" --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" --api-key "${{ secrets.GITHUB_TOKEN }}" --skip-duplicate
+          done
 
       - name: Upload NuGet package artifact
         uses: actions/upload-artifact@v4
